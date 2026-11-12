@@ -1,10 +1,13 @@
 #pragma once
 #include "tcp.h"
+#include "tcps.h"
 #include "url.h"
+
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <memory>
 
 struct HttpResponse {
   std::string status;
@@ -36,12 +39,18 @@ HttpResponse parseResponse(const std::string &raw) {
 
 std::string httpGet(const std::string &url) {
   Url u = parseUrl(url);
-  if (u.scheme != "http") {
-    printf("Only http\n");
+
+    std::unique_ptr<TCP> tcp;
+  if (u.scheme == "http") {
+      tcp = std::make_unique<TCP>(u.host, u.port);
+  }else if(u.scheme == "https") {
+        tcp = std::make_unique<TCPS>(u.host, u.port);
+  }else {
+    printf("Unsupport scheme: %s\n", u.scheme);
     exit(1);
   }
-  TCP tcp(u.host, u.port);
-  int fd = tcp.getFd();
+  
+  int fd = tcp->getFd();
   if (fd < 0) {
     printf("connection failed\n");
     exit(1);
@@ -58,23 +67,21 @@ std::string httpGet(const std::string &url) {
   std::string request = req.str();
 
   // Send (loop until all bytes sent, MSG_NOSIGNAL avoids SIGPIPE)
-  size_t sent = 0;
+  int sent = 0;
   while (sent < request.size()) {
-    ssize_t n =
-        send(fd, request.data() + sent, request.size() - sent, MSG_NOSIGNAL);
+    int n = tcp->sendA(request.data() + sent, request.size() - sent);
     if (n <= 0) {
-      close(fd);
       printf("send() failed\n");
       exit(1);
     }
-    sent += static_cast<size_t>(n);
+    sent += (n);
   }
 
   // Receive until server closes
   std::string response;
   char buf[8192];
   while (true) {
-    ssize_t n = recv(fd, buf, sizeof(buf), 0);
+    int n = tcp->recvA(buf, sizeof(buf));
     if (n == 0)
       break;
     if (n < 0) {
@@ -84,6 +91,6 @@ std::string httpGet(const std::string &url) {
     }
     response.append(buf, static_cast<size_t>(n));
   }
-  close(fd);
+
   return response;
 }
