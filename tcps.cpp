@@ -11,6 +11,11 @@ TCPS::TCPS(const std::string &host, const std::string &port) : TCP(host, port) {
   if (!ctx)
     throw std::runtime_error("SSL_CTX_new failed");
 
+  if (SSL_CTX_set_default_verify_paths(ctx.get()) != 1) {
+    ERR_print_errors_fp(stderr);
+    throw std::runtime_error("Failed to load default CA certs");
+  }
+
   SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER, nullptr);
 
   ssl.reset(SSL_new(ctx.get()));
