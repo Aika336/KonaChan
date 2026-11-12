@@ -8,11 +8,17 @@
 #include <string>
 
 class TCP {
+protected:
   addrinfo hint{};
-  int fd;
+  int fd{-1};
+
+  void Connection(const std::string &host, const std::string &port);
 
 public:
   TCP(const std::string &host, const std::string &port);
-  ~TCP();
+  virtual ~TCP();
+
   int getFd();
+  virtual int sendA(const void *buffer, int len);
+  virtual int recvA(void *buffer, int len);
 };

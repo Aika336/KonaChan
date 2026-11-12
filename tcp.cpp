@@ -1,9 +1,10 @@
 #include "tcp.h"
 
-#include <sys/socket.h>
-#include <unistd.h>
-
 TCP::TCP(const std::string &host, const std::string &port) {
+  Connection(host, port);
+}
+
+void TCP::Connection(const std::string &host, const std::string &port) {
   hint.ai_family = AF_UNSPEC;
   hint.ai_socktype = SOCK_STREAM;
   fd = -1;
@@ -31,9 +32,17 @@ TCP::TCP(const std::string &host, const std::string &port) {
 }
 
 TCP::~TCP() {
-  if (fd != -1) {
+  if (fd >= 0) {
     close(fd);
   }
+}
+
+int TCP::sendA(const void *buffer, int len) {
+  return static_cast<int>(send(fd, buffer, len, MSG_NOSIGNAL));
+}
+
+int TCP::recvA(void *buffer, int len) {
+  return static_cast<int>(recv(fd, buffer, len, 0));
 }
 
 int TCP::getFd() { return fd; }
