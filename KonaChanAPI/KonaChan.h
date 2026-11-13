@@ -1,10 +1,14 @@
+#pragma once
+
 #include "http.h"
 
 #include <string>
+#include <vector>
 
 class KonaChan {
-  static std::string base_url_;
+  static const std::string base_url_;
 
 public:
-  KonaChan();
+  KonaChan() = default;
+  void downloadByTagsLimit(const std::vector<std::string> &tags, int limit);
 };

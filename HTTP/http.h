@@ -18,7 +18,7 @@ struct HttpResponse {
   std::string body;
 };
 
-HttpResponse parseResponse(const std::string &raw) {
+inline HttpResponse parseResponse(const std::string &raw) {
   HttpResponse r;
   auto header_end = raw.find("\r\n\r\n");
 
@@ -40,7 +40,7 @@ HttpResponse parseResponse(const std::string &raw) {
   return r;
 }
 
-std::string httpGet(const std::string &url) {
+inline std::string httpGet(const std::string &url) {
   Url u = parseUrl(url);
 
   std::unique_ptr<TCP> tcp;
@@ -95,7 +95,7 @@ std::string httpGet(const std::string &url) {
   return response;
 }
 
-int getStatusCode(const std::string &status_line) {
+inline int getStatusCode(const std::string &status_line) {
   auto sp = status_line.find(' ');
   if (sp == std::string::npos)
     return 0;
@@ -106,7 +106,7 @@ int getStatusCode(const std::string &status_line) {
   }
 }
 
-std::string getHeader(const std::string &head, const std::string &name) {
+inline std::string getHeader(const std::string &head, const std::string &name) {
   std::string lower_name = name;
   std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
                  ::tolower);
@@ -188,7 +188,7 @@ inline std::string resolveUrl(const std::string &base, const std::string &loc) {
   return u.scheme + "://" + hostPort + dir + loc;
 }
 
-void downloadFile(const std::string &url, const std::string &name) {
+inline void downloadFile(const std::string &url, const std::string &name) {
   std::string current_url = url;
 
   for (;;) {
@@ -206,7 +206,7 @@ void downloadFile(const std::string &url, const std::string &name) {
     }
 
     std::string body = res.body;
-    std::string te = getHeader(res.body, "Transfer-Encoding");
+    std::string te = getHeader(res.head, "Transfer-Encoding");
     if (te.find("chunked") != std::string::npos) {
       body = decodeChunked(body);
     }
