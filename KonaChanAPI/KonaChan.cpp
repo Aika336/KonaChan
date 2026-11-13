@@ -1,12 +1,11 @@
 #include "KonaChan.h"
 
-// for test
 #include <iostream>
+#include <stdexcept>
 
 const std::string KonaChan::base_url_ = "https://konachan.net/post.json?";
 
-void KonaChan::downloadByTagsLimit(const std::vector<std::string> &tags,
-                                   int limit) {
+std::string KonaChan::makeUrl(const std::vector<std::string> &tags, int limit) {
   std::string url{base_url_};
   url.append("tags=");
 
@@ -24,8 +23,13 @@ void KonaChan::downloadByTagsLimit(const std::vector<std::string> &tags,
   }
 
   url.append("&limit=" + std::to_string(limit));
-  std::string res = std::move(httpGet(url));
+  return url;
+}
 
-  std::cout << url << std::endl;
-  std::cout << res << std::endl;
+std::string KonaChan::getJsonFromUrl(const std::string &url) {
+  try {
+    return httpGet(url);
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+  }
 }

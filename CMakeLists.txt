@@ -36,6 +36,7 @@ target_link_libraries(HTTP INTERFACE
 
 add_library(KonaChanAPI STATIC
     KonaChanAPI/KonaChan.cpp
+    KonaChanAPI/json.hpp
 )
 
 target_link_directories(KonaChanAPI PUBLIC

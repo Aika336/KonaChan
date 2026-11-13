@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -23,8 +24,7 @@ inline HttpResponse parseResponse(const std::string &raw) {
   auto header_end = raw.find("\r\n\r\n");
 
   if (header_end == std::string::npos) {
-    printf("Malformed HTTPS response\n");
-    exit(1);
+    throw std::runtime_error("Malformed HTTPS response");
   }
 
   std::string head = raw.substr(0, header_end);
@@ -49,14 +49,12 @@ inline std::string httpGet(const std::string &url) {
   } else if (u.scheme == "https") {
     tcp = std::make_unique<TCPS>(u.host, u.port);
   } else {
-    printf("Unsupport scheme: %s\n", u.scheme);
-    exit(1);
+    throw std::runtime_error("Unsupport scheme: " + u.scheme);
   }
 
   int fd = tcp->getFd();
   if (fd < 0) {
-    printf("connection failed\n");
-    exit(1);
+    throw std::runtime_error("connection failed");
   }
 
   std::ostringstream req;
@@ -72,8 +70,7 @@ inline std::string httpGet(const std::string &url) {
   while (sent < request.size()) {
     int n = tcp->sendA(request.data() + sent, request.size() - sent);
     if (n <= 0) {
-      printf("send() failed\n");
-      exit(1);
+      throw std::runtime_error("send() failed");
     }
     sent += (n);
   }
