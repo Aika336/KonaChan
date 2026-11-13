@@ -28,11 +28,20 @@ std::string KonaChan::makeUrl(const std::vector<std::string> &tags, int limit) {
 
 std::string KonaChan::getJsonFromUrl(const std::string &url) {
   try {
-    std::string data = httpGet(url);
+    std::string raw = httpGet(url);
 
-    data = data.substr(data.find("[{\"id\":"));
+    HttpResponse res = parseResponse(raw);
+    if (getStatusCode(res.status) != 200) {
+      return "";
+    }
 
-    std::cout << data << std::endl;
+    std::string data = res.body;
+    std::string te = getHeader(res.head, "Transfer-Encoding");
+
+    if (te.find("chunked") != std::string::npos) {
+      data = decodeChunked(data);
+    }
+
     return data;
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
