@@ -34,7 +34,15 @@ target_link_libraries(HTTP INTERFACE
     TCPS
 )
 
+add_library(KonaChanAPI STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/KonaChanAPI
+)
+
+target_link_libraries(KonaChanAPI PUBLIC
+    HTTP
+)
+
 add_executable(KonaChan
     main.cpp
 )
-target_link_libraries(KonaChan PRIVATE HTTP)
+target_link_libraries(KonaChan PRIVATE KonaChanAPI)

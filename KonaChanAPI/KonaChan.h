@@ -1,3 +1,5 @@
+#include "http.h"
+
 #include <string>
 
 class KonaChan {
