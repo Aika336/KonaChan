@@ -29,6 +29,24 @@ int main(int argc, char **argv) {
   KonaChan k;
   std::vector<std::string> tags = {"white", "nun"};
   int limit = 5;
-  k.downloadByTagsLimit(tags, limit);
+
+  try {
+    std::string url = k.makeUrl(tags, limit);
+
+    std::string json_str = k.getJsonFromUrl(url);
+
+    std::vector<PostData> posts = k.parseJsonByString(json_str);
+
+    for (const auto &post : posts) {
+      std::string filename =
+          "konachan_" + std::to_string(post.id) + "." + post.ext;
+
+      downloadFile(post.file_url, filename);
+    }
+
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+  }
+
   return 0;
 }

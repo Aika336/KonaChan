@@ -28,8 +28,50 @@ std::string KonaChan::makeUrl(const std::vector<std::string> &tags, int limit) {
 
 std::string KonaChan::getJsonFromUrl(const std::string &url) {
   try {
-    return httpGet(url);
+    std::string data = httpGet(url);
+
+    data = data.substr(data.find("[{\"id\":"));
+
+    std::cout << data << std::endl;
+    return data;
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
   }
+  return "";
+}
+
+std::vector<PostData> KonaChan::parseJsonByString(const std::string &json_str) {
+  std::vector<PostData> result;
+
+  if (json_str.empty()) {
+    std::cerr << "Json string is empty." << std::endl;
+    return result;
+  }
+
+  try {
+    auto arr = nlohmann::json::parse(json_str);
+
+    result.reserve(arr.size());
+
+    for (const auto &item : arr) {
+      PostData post;
+
+      post.id = item.value("id", 0);
+      post.file_url = item.value("file_url", "");
+      post.tags = item.value("tags", "");
+      post.width = item.value("width", 0);
+      post.height = item.value("height", 0);
+      post.ext = item.value("file_ext", "");
+
+      if (!post.file_url.empty())
+        result.push_back(post);
+    }
+
+  } catch (const nlohmann::json::parse_error &e) {
+    std::cerr << "JSON Parse Error: " << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "Error while parsing JSON: " << e.what() << "\n";
+  }
+
+  return result;
 }
