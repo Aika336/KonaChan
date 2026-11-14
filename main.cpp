@@ -22,22 +22,31 @@ int main(int argc, char **argv) {
   return 0;
 }*/
 
-#include "http.h"
+#include "KonaChanAPI/KonaChan.h"
 #include <iostream>
 
 int main(int argc, char **argv) {
-  if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <url> [output_file]\n";
-    return 1;
-  }
-  std::string url = argv[1];
-  std::string out = (argc > 2) ? argv[2] : "download.bin";
+  KonaChan k;
+  std::vector<std::string> tags = {"white", "nun"};
+  int limit = 5;
 
   try {
-    downloadFile(url, out);
+    std::string url = k.makeUrl(tags, limit);
+
+    std::string json_str = k.getJsonFromUrl(url);
+
+    std::vector<PostData> posts = k.parseJsonByString(json_str);
+
+    for (const auto &post : posts) {
+      std::string filename =
+          "konachan_" + std::to_string(post.id) + "." + post.ext;
+
+      downloadFile(post.file_url, filename);
+    }
+
   } catch (const std::exception &e) {
-    std::cerr << "Error: " << e.what() << "\n";
-    return 1;
+    std::cerr << e.what() << std::endl;
   }
+
   return 0;
 }

@@ -35,7 +35,12 @@ target_link_libraries(HTTP INTERFACE
 )
 
 add_library(KonaChanAPI STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/KonaChanAPI
+    KonaChanAPI/KonaChan.cpp
+    KonaChanAPI/json.hpp
+)
+
+target_link_directories(KonaChanAPI PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/KonaChanAPI    
 )
 
 target_link_libraries(KonaChanAPI PUBLIC

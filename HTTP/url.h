@@ -1,14 +1,14 @@
 #pragma once
 #include <string>
 
-typedef struct Url {
+struct Url {
   std::string scheme;
   std::string host;
   std::string port;
   std::string path;
 };
 
-Url parseUrl(const std::string &url) {
+inline Url parseUrl(const std::string &url) {
   Url u;
   auto scheme_end = url.find("://");
   if (scheme_end == std::string::npos) {

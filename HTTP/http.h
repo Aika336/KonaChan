@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -18,13 +19,12 @@ struct HttpResponse {
   std::string body;
 };
 
-HttpResponse parseResponse(const std::string &raw) {
+inline HttpResponse parseResponse(const std::string &raw) {
   HttpResponse r;
   auto header_end = raw.find("\r\n\r\n");
 
   if (header_end == std::string::npos) {
-    printf("Malformed HTTPS response\n");
-    exit(1);
+    throw std::runtime_error("Malformed HTTPS response");
   }
 
   std::string head = raw.substr(0, header_end);
@@ -40,7 +40,7 @@ HttpResponse parseResponse(const std::string &raw) {
   return r;
 }
 
-std::string httpGet(const std::string &url) {
+inline std::string httpGet(const std::string &url) {
   Url u = parseUrl(url);
 
   std::unique_ptr<TCP> tcp;
@@ -49,14 +49,12 @@ std::string httpGet(const std::string &url) {
   } else if (u.scheme == "https") {
     tcp = std::make_unique<TCPS>(u.host, u.port);
   } else {
-    printf("Unsupport scheme: %s\n", u.scheme);
-    exit(1);
+    throw std::runtime_error("Unsupport scheme: " + u.scheme);
   }
 
   int fd = tcp->getFd();
   if (fd < 0) {
-    printf("connection failed\n");
-    exit(1);
+    throw std::runtime_error("connection failed");
   }
 
   std::ostringstream req;
@@ -72,8 +70,7 @@ std::string httpGet(const std::string &url) {
   while (sent < request.size()) {
     int n = tcp->sendA(request.data() + sent, request.size() - sent);
     if (n <= 0) {
-      printf("send() failed\n");
-      exit(1);
+      throw std::runtime_error("send() failed");
     }
     sent += (n);
   }
@@ -95,7 +92,7 @@ std::string httpGet(const std::string &url) {
   return response;
 }
 
-int getStatusCode(const std::string &status_line) {
+inline int getStatusCode(const std::string &status_line) {
   auto sp = status_line.find(' ');
   if (sp == std::string::npos)
     return 0;
@@ -106,7 +103,7 @@ int getStatusCode(const std::string &status_line) {
   }
 }
 
-std::string getHeader(const std::string &head, const std::string &name) {
+inline std::string getHeader(const std::string &head, const std::string &name) {
   std::string lower_name = name;
   std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
                  ::tolower);
@@ -188,7 +185,7 @@ inline std::string resolveUrl(const std::string &base, const std::string &loc) {
   return u.scheme + "://" + hostPort + dir + loc;
 }
 
-void downloadFile(const std::string &url, const std::string &name) {
+inline void downloadFile(const std::string &url, const std::string &name) {
   std::string current_url = url;
 
   for (;;) {
@@ -206,7 +203,7 @@ void downloadFile(const std::string &url, const std::string &name) {
     }
 
     std::string body = res.body;
-    std::string te = getHeader(res.body, "Transfer-Encoding");
+    std::string te = getHeader(res.head, "Transfer-Encoding");
     if (te.find("chunked") != std::string::npos) {
       body = decodeChunked(body);
     }
